@@ -7,6 +7,7 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a name'],
       unique: true,
       trim: true
+      // select: false // to permanently hide somthing from reponse for eg. passwords
     },
     duration: {
       type: Number,
