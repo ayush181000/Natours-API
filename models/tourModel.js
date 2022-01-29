@@ -52,7 +52,8 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A cover must have a cover image']
     },
     images: [String],
-    startDates: [Date]
+    startDates: [Date],
+    secretTour: { type: Boolean, default: false }
   },
   {
     timestamps: true,
@@ -69,7 +70,8 @@ tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
 
-// DOCUMENT MIDDLEWARE : runs before .save() and .create() command .
+// DOCUMENT MIDDLEWARE : runs before .save() and .create() command
+// this points to current document.
 // Exception : do not run on .insertMany()
 // Multiple hooks can be used
 tourSchema.pre('save', function(next) {
@@ -86,6 +88,23 @@ tourSchema.pre('save', function(next) {
 //   console.log(doc);
 //   next();
 // });
+
+// QUERY MIDDLEWARE : this points to current query
+// tourSchema.pre(['find', 'findOne'], function(next) {
+tourSchema.pre(/^find/, function(next) {
+  // regex ^find : means starts with find
+  this.find({ secretTour: { $ne: true } });
+
+  this.start = Date.now();
+  next();
+});
+
+tourSchema.post(/^find/, function(docs, next) {
+  console.log(`Query took ${Date.now() - this.start} milliseconds`);
+  // console.log(docs);
+
+  next();
+});
 
 const Tour = mongoose.model('Tour', tourSchema);
 
