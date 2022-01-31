@@ -19,7 +19,8 @@ const userSchema = mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Please provide a password'],
-    minlength: 8
+    minlength: 8,
+    select: false
   },
   passwordConfirm: {
     type: String,
@@ -30,7 +31,8 @@ const userSchema = mongoose.Schema({
         return val === this.password;
       }
     }
-  }
+  },
+  passwordChangedAt: Date
 });
 
 userSchema.pre('save', async function(next) {
@@ -44,6 +46,18 @@ userSchema.pre('save', async function(next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+userSchema.methods.correctPassword = async function(
+  candidatePassword,
+  userPassword
+) {
+  // this.password is not available because this refers to current document and current document does not have password as it is false
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.changedPasswordAfter = async function(JWTTimestamp) {
+  if (this) return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User = mongoose.model('User', userSchema);
 
