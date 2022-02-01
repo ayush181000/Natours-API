@@ -4,7 +4,7 @@ const handleCastErrorDB = error => {
   return new AppError(`Invalid ${error.path}: ${error.value}.`, 400);
 };
 
-const handleDuplicatFieldDB = error => {
+const handleDuplicateFieldsDB = error => {
   const value = error.errmsg.match(/(["'])(\\?.)*?\1/)[0];
   return new AppError(
     `Duplicate field value : ${value}. Please use another value`,
@@ -60,14 +60,12 @@ module.exports = (error, req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(error, res);
   } else {
-    let err = { ...error };
+    if (error.name == 'CastError') error = handleCastErrorDB(error);
+    if (error.code == 11000) error = handleDuplicateFieldsDB(error);
+    if (error.name == 'ValidationError') error = handleValidationErrorDB(error);
+    if (error.name == 'JsonWebTokenError') error = handleJWTError();
+    if (error.name == 'TokenExpiredError') error = handleJWTExpiredError();
 
-    if (error.name == 'CastError') err = handleCastErrorDB(error);
-    if (error.code == 11000) err = handleDuplicatFieldDB(error);
-    if (error.name == 'ValidationError') err = handleValidationErrorDB(error);
-    if (error.name == 'JsonWebTokenError') err = handleJWTError();
-    if (error.name == 'TokenExpiredError') err = handleJWTExpiredError();
-
-    sendErrorProd(err, res);
+    sendErrorProd(error, res);
   }
 };
