@@ -32,10 +32,11 @@ const userSchema = mongoose.Schema({
     type: String,
     required: [true, 'Please confirm your password'],
     validate: {
-      // This only works on SAVE !!
+      // This only works on CREATE or SAVE !!
       validator: function(val) {
         return val === this.password;
-      }
+      },
+      message: 'Passwords are not same'
     }
   },
   passwordChangedAt: Date,
