@@ -48,7 +48,6 @@ exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email }).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
-    console.log(await user.correctPassword(password, user.password));
     return next(new AppError('Incorrect email or password', 401));
   }
 
@@ -83,6 +82,7 @@ exports.protect = catchAsync(async (req, res, next) => {
       new AppError('The token belonging to this user no longer exists', 401)
     );
   }
+
   // 4) Check if user changed password after token was issued
   if (!freshUser.changedPasswordAfter(decoded.iat)) {
     return next(
