@@ -10,6 +10,8 @@ router.patch(
   authController.updatePassword
 );
 
+router.patch('/updateMe', authController.protect, userController.updateMe);
+
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 
