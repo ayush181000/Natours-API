@@ -25,11 +25,7 @@ const tourSchema = new mongoose.Schema(
     },
     difficulty: {
       type: String,
-      required: [true, 'A tour must have a difficulty'],
-      enum: {
-        values: ['easy', 'medium', 'difficult'],
-        message: 'Difficulty is either: easy, medium, difficult'
-      }
+      required: [true, 'A tour must have a difficulty']
     },
     ratingsAverage: {
       type: Number,
@@ -71,7 +67,33 @@ const tourSchema = new mongoose.Schema(
     },
     images: [String],
     startDates: [Date],
-    secretTour: { type: Boolean, default: false }
+    secretTour: { type: Boolean, default: false },
+    startLocation: {
+      //GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point']
+      },
+      // longitude , latitude
+      coordinates: [Number],
+      address: String,
+      description: String
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point']
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number
+      }
+    ],
+    guides: Array
   },
   {
     timestamps: true,
@@ -94,6 +116,13 @@ tourSchema.virtual('durationWeeks').get(function() {
 // Multiple hooks can be used
 tourSchema.pre('save', function(next) {
   this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+// only works for creating the document
+tourSchema.pre('save', async function(next) {
+  const guidePromises = this.guides.map(async id => await User.findById(id));
+  this.guides = await Promise.all(guidePromises);
   next();
 });
 
